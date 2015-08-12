@@ -28,6 +28,7 @@ from cosmo_tester.framework.testenv import TestCase
 
 HELLO_WORLD_URL = 'https://github.com/cloudify-cosmo/' \
                   'cloudify-hello-world-example/archive/{0}.zip'
+BOOTSTRAP_TASK_RETRIES = 20
 
 
 class TestCliPackage(TestCase):
@@ -227,10 +228,11 @@ class TestCliPackage(TestCase):
             install_plugins = '--install-plugins'
 
         self._execute_command(
-            'bootstrap -p {0} -i {1} {2}'.format(
+            'bootstrap -p {0} -i {1} {2} --task-retries {3}'.format(
                 self.test_openstack_manager_blueprint_path,
                 self.remote_bootstrap_inputs_path,
-                install_plugins),
+                install_plugins,
+                BOOTSTRAP_TASK_RETRIES),
             within_cfy_env=True)
         self.addCleanup(self.teardown_manager)
 
