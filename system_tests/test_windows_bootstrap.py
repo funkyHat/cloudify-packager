@@ -116,6 +116,8 @@ STDOUT:
 STDERR:
 {2}""".format(r.status_code, r.std_out, r.std_err))
         if r.status_code != 0:
+            self.logger.error('Stdout: {0}'.format(r.std_out))
+            self.logger.error('Stderr: {0}'.format(r.std_err))
             raise Exception('Command: {0} exited with code: {1}'.format(
                 cmd, r.status_code))
         else:
