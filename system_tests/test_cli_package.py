@@ -139,7 +139,7 @@ class TestCliPackage(TestCase):
     def get_deployment_inputs(self):
         return {
             'agent_user': 'ubuntu',
-            'image': self.env.ubuntu_image_id,
+            'image': self.env.ubuntu_trusty_image_id,
             'flavor': self.env.medium_flavor_id
         }
 
