@@ -535,7 +535,7 @@ class TestCliPackage(TestCase):
 
 def wait_for_connection(env_settings, executor,
                         logger=None, retries=10,
-                        retry_interval=30, timeout=10):
+                        retry_interval=30, timeout=30):
     """
     Asserts that a machine received the ssh key for the key manager, and
     it is no ready to be connected via ssh.
