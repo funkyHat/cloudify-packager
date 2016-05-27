@@ -57,7 +57,11 @@ class TestOfflineCliPackage(TestCliPackage):
                         self.logger) as fs:
             additional_inputs = fs.get_processed_inputs()
             additional_inputs.update(self.bootstrap_inputs)
+            with open('/tmp/ilikecake', 'w') as fh:
+                fh.write('%s\n' % additional_inputs)
 
+            with self.get_dns():
+                self.make_bootstrap_blueprint_work_offline(fileserver=fs)
             self.prepare_inputs_and_bootstrap(additional_inputs)
             self.manager_fab_conf = {
                 'user': 'centos',
@@ -67,7 +71,7 @@ class TestOfflineCliPackage(TestCliPackage):
                 'connection_attempts': 10
             }
             self.assert_offline(self.manager_fab_conf, run_on_client=False)
-            self.cfy.upload_plugins()
+            #self.cfy.upload_plugins()
 
             # Adding iaas resolver for the manager machine.
             self.logger.info('adding {0} to /etc/hosts of the manager vm'
@@ -89,6 +93,30 @@ class TestOfflineCliPackage(TestCliPackage):
             self.install_deployment(self.deployment_id)
             self.assert_deployment_working(
                 self._get_app_property('http_endpoint'))
+
+    def make_bootstrap_blueprint_work_offline(self, fileserver, env=None):
+        blueprint = self._execute_command_on_linux(
+            'cat {blueprint_path}'.format(
+                blueprint_path=self.manager_blueprint_path,
+            )
+        )
+        blueprint = yaml.load(blueprint)
+        manager_blueprint_dir = os.path.split(self.manager_blueprint_path)[0]
+        for import_number in range(0, len(blueprint['imports'])):
+            # Hack to work around potential duplicate names
+            import_file = blueprint['imports'][import_number]
+            if 'http' in import_file:
+                new_import = fileserver._process_resource(import_file)
+                blueprint['imports'][import_number] = new_import
+        blueprint = StringIO(blueprint)
+        env = env or self.centos_client_env
+        with fab_env(**env):
+            fab.put(blueprint, '/tmp/manager_blueprint')
+        self._execute_command_on_linux(
+            'sudo mv /tmp/manager_blueprint {path}'.format(
+                path=self.manager_blueprint_path,
+            )
+        )
 
     def _get_yaml_in_temp_file(self, dict_to_write, dict_prefix):
         yaml_to_write = dict_to_write or {}
@@ -143,6 +171,8 @@ class TestOfflineCliPackage(TestCliPackage):
         for k, v in inputs.items():
             if urlparse.urlsplit(str(v.get('default', ''))).scheme:
                 resources[k] = v['default']
+        self.logger.info('ILIKECAKEORIG: %s' % str(inputs.items()))
+        self.logger.info('ILIKECAKE: %s' % str(resources))
         return resources
 
     def get_example(self, example_url):
