@@ -535,7 +535,8 @@ class TestCliPackage(TestCase):
 
 def wait_for_connection(env_settings, executor,
                         logger=None, retries=10,
-                        retry_interval=30, timeout=10):
+                        retry_interval=30, timeout=10,
+                        start_delay=30):
     """
     Asserts that a machine received the ssh key for the key manager, and
     it is no ready to be connected via ssh.
@@ -548,17 +549,17 @@ def wait_for_connection(env_settings, executor,
     :param retry_interval: length of the intervals between each try.
     defaults to 30.
     :param timeout: timeout for each check try. default to 60.
+    :param start_delay: Time in seconds to wait before starting. Sometimes
+    required due to delay in IaaS configuration of SSH on deployed guests.
     :return: None
     """
     local_env_setting = copy.deepcopy(env_settings)
     local_env_setting.update({'abort_exception': FabException})
     local_env_setting.update({'timeout': timeout})
 
-    # Sometimes when not enough time is given before logging in, the iaas
-    # requests for some password.
-    # cooldown_time = 60
-    # logger.info('Waiting for {0} seconds before checking ssh connection'
-    #             .format(cooldown_time))
+    logger.info('Waiting for {0} seconds before checking ssh connection'
+                .format(start_delay))
+    time.sleep(start_delay)
 
     if logger:
         logger.info('Waiting for ssh key to register on the vm...')
