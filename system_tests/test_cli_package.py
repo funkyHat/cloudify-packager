@@ -251,7 +251,7 @@ class TestCliPackage(TestCase):
             fab.run('sudo python {0} {1}'.format(
                 remote_modify_script, self.manager_blueprint_path))
 
-    def prepare_manager_blueprint(self):
+    def prepare_manager_blueprint(self, env=None):
         self.logger.info('Preparing manager blueprint')
         self.manager_blueprints_dir = \
             '{0}/cloudify-manager-blueprints'.format(
@@ -259,6 +259,16 @@ class TestCliPackage(TestCase):
         self.manager_blueprint_path = \
             os.path.join(self.manager_blueprints_dir,
                          self.manager_blueprint_file_name)
+        env = env or self.centos_client_env
+        with fab_env(**env):
+            fab.run(
+                'sudo yum install -y git && '
+                'cd /tmp && '
+                'git clone https://github.com/geokala/cloudify-manager-blueprints.git && '
+                'cd cloudify-manager-blueprints && '
+                'git checkout CFY-5004-testing && '
+                'sudo cp -r * {}'.format(self.manager_blueprints_dir)
+            )
 
     def write_file_remotely(self, local_file_path, remote_file_path, env=None,
                             sudo=False, **kwargs):
@@ -330,6 +340,17 @@ class TestCliPackage(TestCase):
             within_cfy_env=True)
         return blueprint_id
 
+    def upload_hello_world_blueprint(self, source_blueprint):
+        blueprint_id = 'blueprint-{0}'.format(uuid.uuid4())
+        self.logger.info('Uploading hello-world example from: {0} [{1}]'
+                         .format(source_blueprint, blueprint_id))
+        self.client_executor(
+            'blueprints upload -p {0} -b {1}'
+            .format(source_blueprint, blueprint_id),
+            fabric_env=self.centos_client_env,
+            within_cfy_env=True)
+        return blueprint_id
+
     def create_deployment(self, blueprint_id, *_):
         deployment_id = 'deployment-{0}'.format(uuid.uuid4())
 
@@ -343,6 +364,16 @@ class TestCliPackage(TestCase):
             within_cfy_env=True)
 
         return deployment_id
+
+    def install_plugins(self, plugins):
+        for plugin in plugins:
+            self.client_executor(
+                'plugins upload -p {plugin_location}'.format(
+                    plugin_location=plugin,
+                ),
+                fabric_env=self.centos_client_env,
+                within_cfy_env=True,
+            )
 
     def install_deployment(self, deployment_id):
         self.logger.info(
