@@ -55,7 +55,7 @@ class RHELBase(object):
             'ssh_user': self.env.rhel_7_image_user,
             'agents_user': self.env.rhel_7_image_user,
             'image_id': self.env.rhel_7_image_id,
-            'instance_type': self.env.medium_instance_type,
+            'instance_type': self.env.large_instance_type,
             'ssh_key_filename': '~/.ssh/{0}-cloudify-manager-kp.pem'.format(
                 self.prefix),
         }

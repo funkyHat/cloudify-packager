@@ -88,7 +88,7 @@ class TestWindowsBase(TestCliPackage):
             'ssh_user': 'centos',
             'agents_user': 'centos',
             'image_id': self.env.centos_7_image_id,
-            'instance_type': self.env.medium_instance_type,
+            'instance_type': self.env.large_instance_type,
             'ssh_key_filename': '{0}\\manager-kp.pem'.format(
                 self.client_cfy_work_dir),
             'agent_private_key_path': '{0}\\agent-kp.pem'.format(
