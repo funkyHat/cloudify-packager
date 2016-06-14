@@ -13,6 +13,7 @@
 # * See the License for the specific language governing permissions and
 #    * limitations under the License.
 import os
+import re
 import ast
 import json
 import time
@@ -35,7 +36,7 @@ import sh
 from cosmo_tester.framework.util import sh_bake
 cfy = sh_bake(sh.cfy)
 
-
+fab.env['disable_known_hosts'] = True
 
 CHECK_URL = 'www.google.com'
 HELLO_WORLD_EXAMPLE_NAME = 'cloudify-hello-world-example'
@@ -270,9 +271,12 @@ class TestCliPackage(TestCase):
             fab.run(
                 'sudo yum install -y git && '
                 'cd /tmp && '
-                'git clone https://github.com/cloudify-cosmo/cloudify-manager-blueprints.git && '
+
+                'git clone https://github.com/cloudify-cosmo/'
+                'cloudify-manager-blueprints.git && '
+
                 'cd cloudify-manager-blueprints && '
-			'git checkout f2d73c6 && '
+                'git checkout f2d73c6 && '
                 'sudo cp -r * {}'.format(self.manager_blueprints_dir)
             )
 
@@ -424,11 +428,19 @@ class TestCliPackage(TestCase):
             self._get_app_property('http_endpoint'))
 
     def _manager_ip(self):
-        ip = self._execute_command_on_linux('status'.format(
-            self.client_cfy_work_dir), fabric_env=self.centos_client_env,
-            within_cfy_env=True).replace(
-            "Retrieving management services status... [ip=", '').replace(
-            ']', '').strip()
+        ip = re.search(
+            '\[ip='  # [ literal needs escaping
+            '('  # start of match group
+            '[\d.]'  # character class of digits and (literal) .
+            '{7,15}'  # repeat between 7 and 15 times
+            ')'  # end of match group
+            '\]'  # literal ]
+            ,
+            self._execute_command_on_linux(
+                'status',
+                fabric_env=self.centos_client_env,
+                within_cfy_env=True),
+            ).group(1)
         self.logger.info(ip)
         return ip.split('\n')[0]
 
