@@ -159,20 +159,6 @@ class TestOfflineCliPackage(TestCliPackage):
             # Hack to work around potential duplicate names
             import_file = blueprint['imports'][import_number]
             if 'http' in import_file:
-                if 'diamond-plugin' in import_file:
-                    diamond_version = os.environ.get('AGENT_DIAMOND_VERSION',
-                                                     '1.3.3')
-                    import_file = import_file.split('/')
-                    diamond_plugin = import_file.index('diamond-plugin')
-                    if diamond_plugin > -1:
-                        import_file[diamond_plugin + 1] = diamond_version
-                    else:
-                        raise ValueError(
-                            'Example blueprint diamond plugin URL did not '
-                            'match expected structure: '
-                            'http[s]://<something>/<...>/diamond-plugin/'
-                            '<version>/plugin.yaml'
-                        )
                 new_import = fileserver._process_resource(import_file)
                 blueprint['imports'][import_number] = new_import
         self.logger.info('MODIFIED BLUEPRINT: {blueprint}'.format(blueprint=blueprint))

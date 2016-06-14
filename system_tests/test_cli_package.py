@@ -30,6 +30,12 @@ from cloudify_cli import constants as cli_constants
 from cosmo_tester.framework.testenv import TestCase
 from fabric.context_managers import settings as fab_env, cd
 
+# TODO: Reorder these
+import sh
+from cosmo_tester.framework.util import sh_bake
+cfy = sh_bake(sh.cfy)
+
+
 
 CHECK_URL = 'www.google.com'
 HELLO_WORLD_EXAMPLE_NAME = 'cloudify-hello-world-example'
@@ -264,9 +270,9 @@ class TestCliPackage(TestCase):
             fab.run(
                 'sudo yum install -y git && '
                 'cd /tmp && '
-                'git clone https://github.com/geokala/cloudify-manager-blueprints.git && '
+                'git clone https://github.com/cloudify-cosmo/cloudify-manager-blueprints.git && '
                 'cd cloudify-manager-blueprints && '
-                'git checkout CFY-5004-testing && '
+			'git checkout f2d73c6 && '
                 'sudo cp -r * {}'.format(self.manager_blueprints_dir)
             )
 
@@ -323,11 +329,14 @@ class TestCliPackage(TestCase):
             fabric_env=self.centos_client_env,
             within_cfy_env=True)
 
-        self.assertIn('bootstrapping complete', out, 'Bootstrap has failed')
+        self.assertIn('Bootstrap complete', out, 'Bootstrap has failed')
 
         self.manager_ip = self._manager_ip()
         self.client = CloudifyClient(self.manager_ip)
         self.addCleanup(self.teardown_manager)
+        cfy.init()
+        self.cfy.use(self.manager_ip)
+        self.cfy.upload_plugins()
 
     def publish_hello_world_blueprint(self, source_archive):
         blueprint_id = 'blueprint-{0}'.format(uuid.uuid4())
@@ -418,8 +427,8 @@ class TestCliPackage(TestCase):
         ip = self._execute_command_on_linux('status'.format(
             self.client_cfy_work_dir), fabric_env=self.centos_client_env,
             within_cfy_env=True).replace(
-            "Getting management services status... [ip=", '').replace(
-            ']', '')
+            "Retrieving management services status... [ip=", '').replace(
+            ']', '').strip()
         self.logger.info(ip)
         return ip.split('\n')[0]
 
